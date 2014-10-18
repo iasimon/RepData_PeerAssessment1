@@ -57,6 +57,13 @@ plot(with(activity, tapply(steps, interval, mean, na.rm = TRUE)),
 axis(1, at = 1:length(levels(activity$interval)), labels = levels(activity$interval))
 ```
 
+We report which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps.
+```{r}
+library("plyr")
+interval_mean <- ddply(activity, .(interval), summarise, mean_steps = mean(steps, na.rm = TRUE))
+interval_mean[which.max(interval_mean$mean_steps),]
+```
+
 ## Imputing missing values
 
 We calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
@@ -66,8 +73,6 @@ sum(is.na(activity$steps))
 
 We devise a strategy for filling in all of the missing values in the dataset. We use the mean for the particular 5-minute intervals and create a new dataset that is equal to the original dataset but with the missing data filled in.
 ```{r}
-library("plyr")
-interval_mean <- ddply(activity, .(interval), summarise, mean_steps = mean(steps, na.rm = TRUE))
 activity_m <- activity
 activity_m[is.na(activity_m$steps), "steps"] <- interval_mean$mean_steps[match(activity_m[is.na(activity_m$steps), "interval"], interval_mean$interval)]
 ```

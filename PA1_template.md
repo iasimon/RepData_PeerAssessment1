@@ -72,6 +72,19 @@ axis(1, at = 1:length(levels(activity$interval)), labels = levels(activity$inter
 
 ![plot of chunk unnamed-chunk-5](./PA1_template_files/figure-html/unnamed-chunk-5.png) 
 
+We report which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps.
+
+```r
+library("plyr")
+interval_mean <- ddply(activity, .(interval), summarise, mean_steps = mean(steps, na.rm = TRUE))
+interval_mean[which.max(interval_mean$mean_steps),]
+```
+
+```
+##     interval mean_steps
+## 104    08:35      206.2
+```
+
 ## Imputing missing values
 
 We calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
@@ -87,8 +100,6 @@ sum(is.na(activity$steps))
 We devise a strategy for filling in all of the missing values in the dataset. We use the mean for the particular 5-minute intervals and create a new dataset that is equal to the original dataset but with the missing data filled in.
 
 ```r
-library("plyr")
-interval_mean <- ddply(activity, .(interval), summarise, mean_steps = mean(steps, na.rm = TRUE))
 activity_m <- activity
 activity_m[is.na(activity_m$steps), "steps"] <- interval_mean$mean_steps[match(activity_m[is.na(activity_m$steps), "interval"], interval_mean$interval)]
 ```
@@ -103,7 +114,7 @@ hist(with(activity_m, tapply(steps, date, sum)),
         )
 ```
 
-![plot of chunk unnamed-chunk-8](./PA1_template_files/figure-html/unnamed-chunk-8.png) 
+![plot of chunk unnamed-chunk-9](./PA1_template_files/figure-html/unnamed-chunk-9.png) 
 
 ```r
 mean(with(activity_m, tapply(steps, date, sum)), na.rm=TRUE)
@@ -158,6 +169,6 @@ mtext("Average step count on weekdays and weekends", outer = TRUE, side = 3, fon
 mtext("Interval", outer = TRUE, side = 1, line = 2)
 ```
 
-![plot of chunk unnamed-chunk-10](./PA1_template_files/figure-html/unnamed-chunk-10.png) 
+![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
 
 Weekend days show higher activity level through the entire day compared to weekdays, however the morning peek is higher on weekdays.
