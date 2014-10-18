@@ -1,25 +1,22 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 ## Introduction
 
-It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the ìquantified selfî movement ñ a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the ‚Äúquantified self‚Äù movement ‚Äì a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
 
 This report makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
 ## Loading and preprocessing the data
 
 First we unzip the original data overwriting any existing instace to avoid potential modifications of the csv file. Valid activity.zip file shall be in the working directory.
-```{r}
+
+```r
 unzip("activity.zip")
 activity<- read.csv("activity.csv")
 ```
 
 We transform interval values to a more readable hh:mm format. We transform dates to date format.
-```{r}
+
+```r
 activity$interval <- sprintf("%04d", activity$interval)
 activity$interval <- paste(substr(activity$interval, 1, 2), ":", substr(activity$interval, 3, 4), sep="")
 activity$interval <- as.factor(activity$interval)
@@ -29,7 +26,8 @@ activity$date <- as.Date(activity$date)
 ## What is mean total number of steps taken per day?
 
 We make a histogram of the total number of steps taken each day. Days with missing values are omitted.
-```{r}
+
+```r
 hist(with(activity, tapply(steps, date, sum), na.rm = TRUE),
         main = "Histogram of the total number of steps taken each day",
         xlab = "Total number of steps taken each day",
@@ -37,16 +35,31 @@ hist(with(activity, tapply(steps, date, sum), na.rm = TRUE),
         )
 ```
 
+![plot of chunk unnamed-chunk-3](./PA1_template_files/figure-html/unnamed-chunk-3.png) 
+
 We calculate the mean and median total number of steps taken per day. Days with missing values are omitted not to distort the mean and median.
-```{r}
+
+```r
 mean(with(activity, tapply(steps, date, sum)), na.rm=TRUE)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(with(activity, tapply(steps, date, sum)), na.rm=TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
 
 We make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis). Missing values are omitted when calculating the average in each interval.
-```{r}
+
+```r
 plot(with(activity, tapply(steps, interval, mean, na.rm = TRUE)),
      type = "l",
      xlab = "Interval",
@@ -57,15 +70,23 @@ plot(with(activity, tapply(steps, interval, mean, na.rm = TRUE)),
 axis(1, at = 1:length(levels(activity$interval)), labels = levels(activity$interval))
 ```
 
+![plot of chunk unnamed-chunk-5](./PA1_template_files/figure-html/unnamed-chunk-5.png) 
+
 ## Imputing missing values
 
 We calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs).
-```{r}
+
+```r
 sum(is.na(activity$steps))
 ```
 
+```
+## [1] 2304
+```
+
 We devise a strategy for filling in all of the missing values in the dataset. We use the mean for the particular 5-minute intervals and create a new dataset that is equal to the original dataset but with the missing data filled in.
-```{r}
+
+```r
 library("plyr")
 interval_mean <- ddply(activity, .(interval), summarise, mean_steps = mean(steps, na.rm = TRUE))
 activity_m <- activity
@@ -73,29 +94,48 @@ activity_m[is.na(activity_m$steps), "steps"] <- interval_mean$mean_steps[match(a
 ```
 
 We make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day.
-```{r}
+
+```r
 hist(with(activity_m, tapply(steps, date, sum)),
         main = "Histogram of the total number of steps taken each day",
         xlab = "Total number of steps taken each day",
         breaks = 21,
         )
+```
+
+![plot of chunk unnamed-chunk-8](./PA1_template_files/figure-html/unnamed-chunk-8.png) 
+
+```r
 mean(with(activity_m, tapply(steps, date, sum)), na.rm=TRUE)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(with(activity_m, tapply(steps, date, sum)), na.rm=TRUE)
+```
+
+```
+## [1] 10766
 ```
 
 These values slightly differ from the estimates from the first part of the report. The impact of imputing missing data on the estimates of the total daily number of steps is insignificant in this case.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-We create a new factor variable in the dataset with two levels ñ ìweekdayî and ìweekendî indicating whether a given date is a weekday or weekend day.
-```{r, results='hide'}
+We create a new factor variable in the dataset with two levels ‚Äì ‚Äúweekday‚Äù and ‚Äúweekend‚Äù indicating whether a given date is a weekday or weekend day.
+
+```r
 Sys.setlocale("LC_TIME", "English")
 activity_m$wdays <- as.factor(ifelse(weekdays(activity_m$date) %in% c("Saturday","Sunday"), "weekend", "weekday"))
 Sys.setlocale("LC_TIME", "")
 ```
 
 We make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
-```{r}
+
+```r
 par(mfrow = c(2, 1), mar = c(0, 2, 2, 0.2), oma = c(3, 0, 2, 0.2))
 plot(with(activity_m[activity_m$wdays == "weekday",], tapply(steps, interval, mean, na.rm = TRUE)),
      type = "l",
@@ -117,5 +157,7 @@ axis(1, at = 1:length(levels(activity_m$interval)), labels = levels(activity_m$i
 mtext("Average step count on weekdays and weekends", outer = TRUE, side = 3, font = 2, cex = 1.5)
 mtext("Interval", outer = TRUE, side = 1, line = 2)
 ```
+
+![plot of chunk unnamed-chunk-10](./PA1_template_files/figure-html/unnamed-chunk-10.png) 
 
 Weekend days show higher activity level through the entire day compared to weekdays, however the morning peek is higher on weekdays.
